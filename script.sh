@@ -56,7 +56,7 @@ mkdir -p \
 
 # MariaDB Dockerfile
 cat > srcs/requirements/mariadb/Dockerfile <<'MARIADB_DOCKER'
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
     mariadb-server \
@@ -80,7 +80,7 @@ MARIADB_DOCKER
 
 # WordPress Dockerfile
 cat > srcs/requirements/wordpress/Dockerfile <<'WP_DOCKER'
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
     php8.2 \
@@ -118,7 +118,7 @@ WP_DOCKER
 
 # NGINX Dockerfile
 cat > srcs/requirements/nginx/Dockerfile <<'NGINX_DOCKER'
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
     nginx \
@@ -138,7 +138,7 @@ NGINX_DOCKER
 
 # Redis Dockerfile
 cat > srcs/requirements/bonus/redis/Dockerfile <<'REDIS_DOCKER'
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
     redis-server \
@@ -154,7 +154,7 @@ REDIS_DOCKER
 
 # FTP Dockerfile
 cat > srcs/requirements/bonus/ftp/Dockerfile <<'FTP_DOCKER'
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
     vsftpd \
@@ -173,7 +173,7 @@ FTP_DOCKER
 
 # Static Website Dockerfile
 cat > srcs/requirements/bonus/static_website/Dockerfile <<'STATIC_DOCKER'
-FROM debian:bullseye
+FROM debian:bookworm
 
 RUN apt-get update && apt-get install -y \
     nginx \
