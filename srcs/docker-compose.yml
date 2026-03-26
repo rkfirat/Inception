@@ -97,8 +97,6 @@ services:
     build:
       context: ./requirements/bonus/static_website
       dockerfile: Dockerfile
-    ports:
-      - "8080:80"
     networks:
       - inception
     restart: unless-stopped
@@ -126,8 +124,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
-    ports:
-      - "8000:8000"
     networks:
       - inception
     secrets:
@@ -142,8 +138,6 @@ services:
     build:
       context: ./requirements/bonus/adminer
       dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
     networks:
       - inception
     depends_on:
