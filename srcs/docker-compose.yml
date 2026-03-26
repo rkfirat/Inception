@@ -1,0 +1,201 @@
+services:
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+    volumes:
+      - mariadb:/var/lib/mysql
+    networks:
+      - inception
+    restart: unless-stopped
+    env_file:
+      - .env
+    secrets:
+      - db_root_password
+      - db_password
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "mariadb-admin ping -h localhost -u root -p$(cat /run/secrets/db_root_password)" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  wordpress:
+    container_name: wordpress
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - inception
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    volumes:
+      - wordpress:/var/www/html:ro
+    ports:
+      - "443:443"
+    networks:
+      - inception
+    depends_on:
+      - wordpress
+      - adminer
+      - static_website
+      - portainer
+    restart: unless-stopped
+    env_file:
+      - .env
+
+  redis:
+    container_name: redis
+    build:
+      context: ./requirements/bonus/redis
+      dockerfile: Dockerfile
+    networks:
+      - inception
+    restart: unless-stopped
+
+  ftp:
+    container_name: ftp
+    build:
+      context: ./requirements/bonus/ftp
+      dockerfile: Dockerfile
+    volumes:
+      - wordpress:/var/www/html
+    ports:
+      - "21:21"
+      - "21000-21010:21000-21010"
+    networks:
+      - inception
+    depends_on:
+      - wordpress
+    restart: unless-stopped
+    env_file:
+      - .env
+    secrets:
+      - ftp_password
+
+  static_website:
+    container_name: static_website
+    build:
+      context: ./requirements/bonus/static_website
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    networks:
+      - inception
+    restart: unless-stopped
+
+  minecraft:
+    container_name: minecraft
+    build:
+      context: ./requirements/bonus/minecraft
+      dockerfile: Dockerfile
+    volumes:
+      - minecraft:/minecraft
+    ports:
+      - "25565:25565"
+    networks:
+      - inception
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  portainer:
+    container_name: portainer
+    build:
+      context: ./requirements/bonus/portainer
+      dockerfile: Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    ports:
+      - "8000:8000"
+    networks:
+      - inception
+    secrets:
+      - portainer_password
+      - portainer_user
+      - portainer_password_raw
+    restart: unless-stopped
+    user: root
+
+  adminer:
+    container_name: adminer
+    build:
+      context: ./requirements/bonus/adminer
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - inception
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    restart: unless-stopped
+
+secrets:
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  db_password:
+    file: ../secrets/db_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
+  portainer_password:
+    file: ../secrets/portainer_password.txt
+  portainer_user:
+    file: ../secrets/portainer_user.txt
+  portainer_password_raw:
+    file: ../secrets/portainer_password_raw.txt
+
+volumes:
+  wordpress:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/wordpress
+  mariadb:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/mariadb
+  minecraft:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/minecraft
+  portainer_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/portainer
+
+networks:
+  inception:
+    name: inception
+    driver: bridge
